@@ -1,6 +1,10 @@
 import typing
+
 import pygame
 from pygame.locals import QUIT
+
+import numpy as np
+from math import cos, sin
 
 pygame.init()
 DISPLAYSURF = pygame.display.set_mode((400, 300))
@@ -11,7 +15,20 @@ def rotate(vert: typing.Union[list, tuple], xyz: typing.Union[list, tuple]) -> l
     """
     Rotates given vertice on the X, Y, and Z dimensions.
     """
-    return vert
+    x, y, z = xyz
+    x_matrix = np.array([[1, 0, 0],
+                         [0, cos(z), -sin(x)],
+                         [0, sin(x), cos(x)]])
+
+    y_matrix = np.array([[cos(y), 0, sin(y)],
+                         [0, 1, 0],
+                         [-sin(y), 0, cos(y)]])
+
+    z_matrix = np.array([[cos(z), -sin(z), 0],
+                         [sin(z), cos(z), 0],
+                         [0, 0, 1]])
+
+    return [round(i) for i in np.array(vert).dot(x_matrix).dot(y_matrix).dot(z_matrix)]
 
 
 class Camera:
