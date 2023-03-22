@@ -74,6 +74,6 @@ while running:
 
     screen.fill(BACKGROUND_COLOR)
 
-    # 
+    # Rendering
 
-    pygame.display.flip()
+    pygame.display.update()
