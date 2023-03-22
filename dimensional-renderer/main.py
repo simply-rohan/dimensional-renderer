@@ -8,7 +8,7 @@ from math import cos, sin
 
 pygame.init()
 DISPLAYSURF = pygame.display.set_mode((400, 300))
-pygame.display.set_caption('The Sky Is Falling')
+pygame.display.set_caption('Dimensional Renderer')
 
 
 def rotate(vert: typing.Union[list, tuple], xyz: typing.Union[list, tuple]) -> list:
