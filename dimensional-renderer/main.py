@@ -28,6 +28,65 @@ def rotate(vert: typing.Union[list, tuple], xyz: typing.Union[list, tuple]) -> l
     return [round(i) for i in np.array(vert).dot(x_matrix).dot(y_matrix).dot(z_matrix)]
 
 
+class Shape:
+    def __init__(self, mesh, position, rotation, scale) -> None:
+        self.base_mesh = mesh
+        self.mesh = [
+            [[axis * scale for axis in vertice] for vertice in face]
+            for face in self.base_mesh
+        ]
+
+        self.position = position
+        self.rotation = rotation
+
+
+class Cube(Shape):
+    def __init__(self, scale) -> None:
+        super().__init__(
+            [
+                [
+                    [-0.5, -0.5, -0.5],
+                    [0.5, -0.5, -0.5],
+                    [0.5, 0.5, -0.5],
+                    [-0.5, 0.5, -0.5],
+                ],
+                [
+                    [0.5, -0.5, -0.5],
+                    [0.5, -0.5, 0.5],
+                    [0.5, 0.5, 0.5],
+                    [0.5, 0.5, -0.5],
+                ],
+                [
+                    [0.5, -0.5, 0.5],
+                    [-0.5, -0.5, 0.5],
+                    [-0.5, 0.5, 0.5],
+                    [0.5, 0.5, 0.5],
+                ],
+                [
+                    [-0.5, -0.5, 0.5],
+                    [-0.5, -0.5, -0.5],
+                    [-0.5, 0.5, -0.5],
+                    [-0.5, 0.5, 0.5],
+                ],
+                [
+                    [-0.5, -0.5, 0.5],
+                    [0.5, -0.5, 0.5],
+                    [0.5, -0.5, -0.5],
+                    [-0.5, -0.5, -0.5],
+                ],
+                [
+                    [-0.5, 0.5, -0.5],
+                    [0.5, 0.5, -0.5],
+                    [0.5, 0.5, 0.5],
+                    [-0.5, 0.5, 0.5],
+                ],
+            ],
+            [0, 0, 0],
+            [0, 0, 0],
+            scale,
+        )
+
+
 class Camera:
     """
     Renders all `objs` onto the screen. Uses weak perspective projection. It takes in quads.
