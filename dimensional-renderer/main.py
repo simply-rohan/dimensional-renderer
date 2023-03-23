@@ -39,24 +39,35 @@ class Camera:
         self.scroll = [0, 0, 0]
         self.rotation = [0, 0, 0]
 
-    def render(self, screen):
+        self.focal_length = 60
+
+    def render(self, screen) -> None:
         """
         Will draw objs to the screen. Should be recalled every frame. Handles projection, texturing,
         and ordering.
         """
         pass
 
-    def project(self, vertice):
+    def project(self, vertice) -> tuple:
         """
         Backend method to calculate the 2d position of a point. Bakes in camera offset and rotaion
         as well.
         """
+        # Camera transformations
         real_vert = rotate(vertice, self.rotation)
         real_vert[0] -= self.scroll[0]
         real_vert[1] -= self.scroll[1]
         real_vert[2] -= self.scroll[2]
 
         real_vert = rotate(real_vert, self.rotation)
+
+        # Projection
+        x, y, z = real_vert
+
+        x_projected = (self.focal_length * x) / (self.focal_length + z)
+        y_projected = (self.focal_length * y) / (self.focal_length + z)
+
+        return x_projected, y_projected
 
     def warp(self, texture, quad) -> pygame.Surface:
         """
