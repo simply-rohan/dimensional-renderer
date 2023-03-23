@@ -10,7 +10,9 @@ from settings import *
 
 pygame.init()
 
-screen = pygame.display.set_mode((400, 300))
+screen = pygame.display.set_mode((600, 600))
+clock = pygame.Clock()
+
 pygame.display.set_caption("Dimensional Renderer")
 
 
@@ -107,7 +109,18 @@ class Camera:
         """
         for obj in self.objs:
             for face in obj.mesh:
-                projected_vertice = [self.project([vertex[0]+obj.position[0], vertex[1]+obj.position[1], vertex[2]+obj.position[2]]) for vertex in face]
+                projected_vertice = []
+                for vertex in face:
+                    true_vertex = rotate(vertex, obj.rotation)
+                    projected_vertice.append(
+                        self.project(
+                            [
+                                true_vertex[0] + obj.position[0],
+                                true_vertex[1] + obj.position[1],
+                                true_vertex[2] + obj.position[2],
+                            ]
+                        )
+                    )
                 pygame.draw.polygon(screen, "black", projected_vertice, 2)
 
     def project(self, vertex) -> tuple:
@@ -126,8 +139,8 @@ class Camera:
         # Projection
         x, y, z = real_vert
 
-        x_projected = (self.focal_length * x) / (self.focal_length + z)
-        y_projected = (self.focal_length * y) / (self.focal_length + z)
+        x_projected = (self.focal_length * x) / (self.focal_length + z) + 300
+        y_projected = (self.focal_length * y) / (self.focal_length + z) + 300
 
         return x_projected, y_projected
 
@@ -137,7 +150,9 @@ class Camera:
         """
         pass
 
-camera = Camera([Cube(60)])
+
+c = Cube(60)
+camera = Camera([c])
 
 running = True
 while running:
@@ -152,3 +167,5 @@ while running:
     camera.render(screen)
 
     pygame.display.flip()
+
+    clock.tick(24)
