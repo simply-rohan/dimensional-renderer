@@ -17,6 +17,10 @@ clock = pygame.Clock()
 
 pygame.display.set_caption("Dimensional Renderer")
 
+texture = pygame.image.load(
+    "/Users/rohangupta/Documents/Code/dimensional-renderer/dimensional-renderer/plank.jpg"
+).convert_alpha()
+
 
 def rotate(vert: typing.Union[list, tuple], xyz: typing.Union[list, tuple]) -> list:
     """
@@ -109,21 +113,36 @@ class Camera:
         Will draw objs to the screen. Should be recalled every frame. Handles projection, texturing,
         and ordering.
         """
+        render_order = []
         for obj in self.objs:
             for face in obj.mesh:
                 projected_vertice = []
+                lowest_z = -float("inf")
                 for vertex in face:
                     true_vertex = rotate(vertex, obj.rotation)
-                    projected_vertice.append(
-                        self.project(
-                            [
-                                true_vertex[0] + obj.position[0],
-                                true_vertex[1] + obj.position[1],
-                                true_vertex[2] + obj.position[2],
-                            ]
-                        )
-                    )
-                pygame.draw.polygon(screen, "black", projected_vertice, 2)
+                    true_vertex = [
+                        true_vertex[0] + obj.position[0],
+                        true_vertex[1] + obj.position[1],
+                        true_vertex[2] + obj.position[2],
+                    ]
+                    projected_vertice.append(self.project(true_vertex))
+                    lowest_z = max(lowest_z, true_vertex[2])
+                render_order.append([projected_vertice, lowest_z])
+
+        def quick_sort(array):
+            if len(array) < 2:
+                return array
+            else:
+                pivot = array[0]
+                less = [i for i in array[1:] if i[1] >= pivot[1]]
+                greater = [i for i in array[1:] if i[1] < pivot[1]]
+                return quick_sort(less) + [pivot] + quick_sort(greater)
+
+        render_order = quick_sort(render_order)
+        for face in render_order:
+            # pygame.draw.polygon(screen, "black", face[0], 3)
+            warped = self.warp(texture, face[0])
+            screen.blit(warped[0], warped[1])
 
     def project(self, vertex) -> tuple:
         """
@@ -149,7 +168,11 @@ class Camera:
     def warp(self, texture, quad) -> pygame.Surface:
         """
         Takes a `pygame.Surface` as a texture. Returns the texture mapped to a `quad`.
+        
+        Credit to @davidpendergast for this function
         """
+        out = screen
+
         # Check that quad contains four points
         if len(quad) != 4:
             raise ValueError("quad must contain four points")
@@ -222,8 +245,7 @@ class Camera:
         )
 
 
-c = Cube(60)
-camera = Camera([c])
+camera = Camera([])
 
 running = True
 while running:
@@ -236,9 +258,7 @@ while running:
 
     # Rendering
     camera.render(screen)
-    c.rotation[2] += 0.05
-    c.rotation[0] += 0.05
 
     pygame.display.flip()
 
-    clock.tick(24)
+    clock.tick(60)
