@@ -16,7 +16,7 @@ pygame.display.set_caption("Dimensional Renderer")
 
 def rotate(vert: typing.Union[list, tuple], xyz: typing.Union[list, tuple]) -> list:
     """
-    Rotates given vertice on the X, Y, and Z dimensions.
+    Rotates given vertex on the X, Y, and Z dimensions.
     """
     x, y, z = xyz
     x_matrix = np.array([[1, 0, 0], [0, cos(z), -sin(x)], [0, sin(x), cos(x)]])
@@ -32,7 +32,7 @@ class Shape:
     def __init__(self, mesh, position, rotation, scale) -> None:
         self.base_mesh = mesh
         self.mesh = [
-            [[axis * scale for axis in vertice] for vertice in face]
+            [[axis * scale for axis in vertex] for vertex in face]
             for face in self.base_mesh
         ]
 
@@ -105,15 +105,18 @@ class Camera:
         Will draw objs to the screen. Should be recalled every frame. Handles projection, texturing,
         and ordering.
         """
-        pass
+        for obj in self.objs:
+            for face in obj.mesh:
+                projected_vertice = [self.project([vertex[0]+obj.position[0], vertex[1]+obj.position[1], vertex[2]+obj.position[2]]) for vertex in face]
+                pygame.draw.polygon(screen, "black", projected_vertice, 2)
 
-    def project(self, vertice) -> tuple:
+    def project(self, vertex) -> tuple:
         """
         Backend method to calculate the 2d position of a point. Bakes in camera offset and rotaion
         as well.
         """
         # Camera transformations
-        real_vert = rotate(vertice, self.rotation)
+        real_vert = rotate(vertex, self.rotation)
         real_vert[0] -= self.scroll[0]
         real_vert[1] -= self.scroll[1]
         real_vert[2] -= self.scroll[2]
@@ -134,6 +137,7 @@ class Camera:
         """
         pass
 
+camera = Camera([Cube(60)])
 
 running = True
 while running:
@@ -145,5 +149,6 @@ while running:
     screen.fill(BACKGROUND_COLOR)
 
     # Rendering
+    camera.render(screen)
 
     pygame.display.flip()
