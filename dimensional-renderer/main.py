@@ -8,6 +8,8 @@ from math import cos, sin
 
 from settings import *
 
+import cv2
+
 pygame.init()
 
 screen = pygame.display.set_mode((600, 600))
@@ -21,7 +23,7 @@ def rotate(vert: typing.Union[list, tuple], xyz: typing.Union[list, tuple]) -> l
     Rotates given vertex on the X, Y, and Z dimensions.
     """
     x, y, z = xyz
-    x_matrix = np.array([[1, 0, 0], [0, cos(z), -sin(x)], [0, sin(x), cos(x)]])
+    x_matrix = np.array([[1, 0, 0], [0, cos(x), -sin(x)], [0, sin(x), cos(x)]])
 
     y_matrix = np.array([[cos(y), 0, sin(y)], [0, 1, 0], [-sin(y), 0, cos(y)]])
 
@@ -148,7 +150,76 @@ class Camera:
         """
         Takes a `pygame.Surface` as a texture. Returns the texture mapped to a `quad`.
         """
-        pass
+        # Check that quad contains four points
+        if len(quad) != 4:
+            raise ValueError("quad must contain four points")
+
+        # Get texture size and check if it has alpha channel
+        w, h = texture.get_size()
+        is_alpha = texture.get_flags() & pygame.SRCALPHA
+
+        # Define source corners for transformation
+        src_corners = np.float32([(0, 0), (0, w), (h, w), (h, 0)])
+        # Swap x and y coordinates in quad
+        quad = [tuple(reversed(p)) for p in quad]
+
+        # Find the bounding box of quad points
+        min_x, max_x = float("inf"), -float("inf")
+        min_y, max_y = float("inf"), -float("inf")
+        for p in quad:
+            min_x, max_x = min(min_x, p[0]), max(max_x, p[0])
+            min_y, max_y = min(min_y, p[1]), max(max_y, p[1])
+        warp_bounding_box = pygame.Rect(
+            int(min_x), int(min_y), int(max_x - min_x), int(max_y - min_y)
+        )
+
+        # Shift quad so that the top-left corner is at (0, 0)
+        shifted_quad = [(p[0] - min_x, p[1] - min_y) for p in quad]
+        # Define destination corners for transformation
+        dst_corners = np.float32(shifted_quad)
+
+        # Compute perspective transform matrix
+        mat = cv2.getPerspectiveTransform(src_corners, dst_corners)
+
+        # Convert texture to numpy array
+        orig_rgb = pygame.surfarray.pixels3d(texture)
+
+        # Set flags for cv2.warpPerspective
+        flags = cv2.INTER_LINEAR
+        # Apply perspective transformation to texture
+        out_rgb = cv2.warpPerspective(
+            orig_rgb, mat, warp_bounding_box.size, flags=flags
+        )
+
+        # Create new surface for output
+        if out is None or out.get_size() != out_rgb.shape[0:2]:
+            out = pygame.Surface(out_rgb.shape[0:2], pygame.SRCALPHA if is_alpha else 0)
+
+        # Copy numpy array to output surface
+        pygame.surfarray.blit_array(out, out_rgb)
+
+        # If texture has alpha channel, apply transformation to alpha channel
+        if is_alpha:
+            # Convert alpha channel to numpy array
+            orig_alpha = pygame.surfarray.pixels_alpha(texture)
+            # Apply perspective transformation to alpha channel
+            out_alpha = cv2.warpPerspective(
+                orig_alpha, mat, warp_bounding_box.size, flags=flags
+            )
+            # Copy alpha channel numpy array to output surface
+            alpha_px = pygame.surfarray.pixels_alpha(out)
+            alpha_px[:] = out_alpha
+        else:
+            # If texture doesn't have alpha channel, set color key
+            out.set_colorkey(texture.get_colorkey())
+
+        # Swap x and y coordinates in output bounding box
+        return out, pygame.Rect(
+            warp_bounding_box.y,
+            warp_bounding_box.x,
+            warp_bounding_box.h,
+            warp_bounding_box.w,
+        )
 
 
 c = Cube(60)
@@ -165,6 +236,8 @@ while running:
 
     # Rendering
     camera.render(screen)
+    c.rotation[2] += 0.05
+    c.rotation[0] += 0.05
 
     pygame.display.flip()
 
