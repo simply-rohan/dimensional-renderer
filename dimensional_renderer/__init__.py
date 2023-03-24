@@ -6,7 +6,7 @@ from pygame.locals import QUIT
 import numpy as np
 from math import cos, sin
 
-from settings import *
+from .settings import *
 
 import cv2
 
