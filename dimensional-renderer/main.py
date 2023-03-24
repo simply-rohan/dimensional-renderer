@@ -10,17 +10,6 @@ from settings import *
 
 import cv2
 
-pygame.init()
-
-screen = pygame.display.set_mode((600, 600))
-clock = pygame.Clock()
-
-pygame.display.set_caption("Dimensional Renderer")
-
-texture = pygame.image.load(
-    "/Users/rohangupta/Documents/Code/dimensional-renderer/dimensional-renderer/plank.jpg"
-).convert_alpha()
-
 
 def rotate(vert: typing.Union[list, tuple], xyz: typing.Union[list, tuple]) -> list:
     """
@@ -168,10 +157,10 @@ class Camera:
     def warp(self, texture, quad) -> pygame.Surface:
         """
         Takes a `pygame.Surface` as a texture. Returns the texture mapped to a `quad`.
-        
+
         Credit to @davidpendergast for this function
         """
-        out = screen
+        out = None
 
         # Check that quad contains four points
         if len(quad) != 4:
@@ -243,22 +232,3 @@ class Camera:
             warp_bounding_box.h,
             warp_bounding_box.w,
         )
-
-
-camera = Camera([])
-
-running = True
-while running:
-    events = pygame.event.get()
-    for event in events:
-        if event.type == QUIT:
-            running = False
-
-    screen.fill(BACKGROUND_COLOR)
-
-    # Rendering
-    camera.render(screen)
-
-    pygame.display.flip()
-
-    clock.tick(60)
